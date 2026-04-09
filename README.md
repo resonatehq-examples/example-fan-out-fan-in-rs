@@ -1,3 +1,5 @@
+![resonate banner](./assets/resonate-banner.png)
+
 # Fan-out / Fan-in — Resonate Rust SDK
 
 Demonstrates fan-out/fan-in parallelism using the Resonate Rust SDK.
