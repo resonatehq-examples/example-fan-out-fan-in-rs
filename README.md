@@ -3,12 +3,12 @@
 # Fan-out / Fan-in — Resonate Rust SDK
 
 Demonstrates fan-out/fan-in parallelism using the Resonate Rust SDK.
-Multiple leaf functions are spawned in parallel via `.spawn()`, and the workflow collects their results through durable handles.
+Multiple tasks are spawned in parallel via `ctx.rpc().spawn()`, and the workflow collects their results through durable handles.
 
 ## What this demonstrates
 
-- Spawning parallel durable executions with `.spawn()`
-- Collecting results from multiple `DurableFuture` handles
+- Spawning parallel durable executions with `ctx.rpc().spawn()`
+- Collecting results from multiple `RemoteFuture` handles
 - Automatic recovery of parallel work items after crashes
 - Each spawned item is individually durable — completed items are never re-executed
 
@@ -76,21 +76,17 @@ use resonate::prelude::*;
 
 #[resonate::function]
 async fn fan_out_fan_in(ctx: &Context, items: Vec<WorkItem>) -> Result<Vec<WorkResult>> {
-    // Fan-out: spawn all items in parallel
-    let mut handles = Vec::new();
-    for item in items {
-        let handle = ctx.run(process_item, item).spawn().await?;
-        handles.push(handle);
-    }
+    // Fan-out: spawn all three items in parallel via rpc
+    let h1 = ctx.rpc::<WorkResult>("process_item", items[0].clone()).spawn().await?;
+    let h2 = ctx.rpc::<WorkResult>("process_item", items[1].clone()).spawn().await?;
+    let h3 = ctx.rpc::<WorkResult>("process_item", items[2].clone()).spawn().await?;
 
-    // Fan-in: collect all results
-    let mut results = Vec::new();
-    for mut handle in handles {
-        let result = handle.await?;
-        results.push(result);
-    }
+    // Fan-in: collect all results — each is individually durable
+    let r1 = h1.await?;
+    let r2 = h2.await?;
+    let r3 = h3.await?;
 
-    Ok(results)
+    Ok(vec![r1, r2, r3])
 }
 
 #[resonate::function]

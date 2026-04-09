@@ -17,26 +17,22 @@ struct WorkResult {
 
 /// Fan-out/fan-in workflow.
 ///
-/// Spawns multiple leaf functions in parallel using `.spawn()`,
+/// Spawns three tasks in parallel using `.spawn()` with remote invocation,
 /// then collects all results through durable handles.
 /// If the process crashes mid-execution, only incomplete items re-execute.
 #[resonate::function]
 async fn fan_out_fan_in(ctx: &Context, items: Vec<WorkItem>) -> Result<Vec<WorkResult>> {
-    // Fan-out: spawn all items in parallel
-    let mut handles = Vec::new();
-    for item in items {
-        let handle = ctx.run(process_item, item).spawn().await?;
-        handles.push(handle);
-    }
+    // Fan-out: spawn all three items in parallel via rpc
+    let h1 = ctx.rpc::<WorkResult>("process_item", items[0].clone()).spawn().await?;
+    let h2 = ctx.rpc::<WorkResult>("process_item", items[1].clone()).spawn().await?;
+    let h3 = ctx.rpc::<WorkResult>("process_item", items[2].clone()).spawn().await?;
 
-    // Fan-in: collect all results
-    let mut results = Vec::new();
-    for mut handle in handles {
-        let result = handle.await?;
-        results.push(result);
-    }
+    // Fan-in: collect all results — each is individually durable
+    let r1 = h1.await?;
+    let r2 = h2.await?;
+    let r3 = h3.await?;
 
-    Ok(results)
+    Ok(vec![r1, r2, r3])
 }
 
 /// Process a single work item.
@@ -44,7 +40,6 @@ async fn fan_out_fan_in(ctx: &Context, items: Vec<WorkItem>) -> Result<Vec<WorkR
 /// completed items are replayed from the log, not re-executed.
 #[resonate::function]
 async fn process_item(item: WorkItem) -> Result<WorkResult> {
-    // Simulate some processing
     let output = format!("Processed: {} (item #{})", item.data, item.id);
     Ok(WorkResult {
         id: item.id,
