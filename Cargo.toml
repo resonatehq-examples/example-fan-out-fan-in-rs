@@ -1,0 +1,10 @@
+[package]
+name = "example-fan-out-fan-in-rs"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+
+[dependencies]
+resonate = { git = "https://github.com/resonatehq/resonate-sdk-rs", branch = "master" }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
