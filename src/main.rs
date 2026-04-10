@@ -17,15 +17,15 @@ struct WorkResult {
 
 /// Fan-out/fan-in workflow.
 ///
-/// Spawns three tasks in parallel using `.spawn()` with remote invocation,
+/// Spawns three leaf functions in parallel using `.spawn()`,
 /// then collects all results through durable handles.
 /// If the process crashes mid-execution, only incomplete items re-execute.
 #[resonate::function]
 async fn fan_out_fan_in(ctx: &Context, items: Vec<WorkItem>) -> Result<Vec<WorkResult>> {
-    // Fan-out: spawn all three items in parallel via rpc
-    let h1 = ctx.rpc::<WorkResult>("process_item", items[0].clone()).spawn().await?;
-    let h2 = ctx.rpc::<WorkResult>("process_item", items[1].clone()).spawn().await?;
-    let h3 = ctx.rpc::<WorkResult>("process_item", items[2].clone()).spawn().await?;
+    // Fan-out: spawn all three items in parallel
+    let h1 = ctx.run(process_item, items[0].clone()).spawn().await?;
+    let h2 = ctx.run(process_item, items[1].clone()).spawn().await?;
+    let h3 = ctx.run(process_item, items[2].clone()).spawn().await?;
 
     // Fan-in: collect all results — each is individually durable
     let r1 = h1.await?;
