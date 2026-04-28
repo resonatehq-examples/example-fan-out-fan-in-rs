@@ -5,6 +5,6 @@ edition = "2021"
 license = "Apache-2.0"
 
 [dependencies]
-resonate = { git = "https://github.com/resonatehq/resonate-sdk-rs", branch = "master" }
+resonate = { git = "https://github.com/resonatehq/resonate-sdk-rs", branch = "main" }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
