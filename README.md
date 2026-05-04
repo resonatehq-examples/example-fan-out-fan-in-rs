@@ -1,4 +1,10 @@
-![resonate banner](./assets/resonate-banner.png)
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./assets/banner-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="./assets/banner-light.png">
+    <img alt="Fan-out / Fan-in — Resonate example" src="./assets/banner-dark.png">
+  </picture>
+</p>
 
 # Fan-out / Fan-in — Resonate Rust SDK
 
